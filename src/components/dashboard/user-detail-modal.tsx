@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { User } from "@/types/user";
 import {
   Dialog,
@@ -22,7 +23,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   formatDate,
   formatDateTime,
@@ -116,12 +116,14 @@ export function UserDetailModal({
           <TabsContent value="personal" className="space-y-6 mt-6">
             {/* Header com foto e nome */}
             <div className="flex items-start gap-4">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-100">
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 relative overflow-hidden">
                 {user.imageUrl ? (
-                  <img
+                  <Image
                     src={user.imageUrl}
                     alt={user.name || "Usuário"}
-                    className="h-20 w-20 rounded-full object-cover"
+                    width={80}
+                    height={80}
+                    className="rounded-full object-cover"
                   />
                 ) : (
                   <UserIcon className="h-10 w-10 text-gray-400" />

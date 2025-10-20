@@ -19,6 +19,11 @@ export interface User {
   notificationConfig?: NotificationConfig;
   plantoes?: Plantao[];
   shiftTemplates?: ShiftTemplate[];
+  _count?: {
+    plantoes?: number;
+    locations?: number;
+    contractors?: number;
+  };
 }
 
 export interface CNPJData {
