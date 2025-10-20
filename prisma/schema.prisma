@@ -1,0 +1,196 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  name               String?
+  email              String              @unique
+  phoneNumber        String?             @map("phone_number")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+  birthDate          DateTime?           @map("birth_date") @db.Date
+  clerkId            String              @unique @map("clerk_id")
+  firstName          String?             @map("first_name")
+  imageUrl           String?             @map("image_url")
+  lastName           String?             @map("last_name")
+  gender             String?
+  cnpjData           CNPJData?
+  contractors        Contractor[]
+  deviceTokens       DeviceToken[]
+  locations          Location[]
+  notificationConfig NotificationConfig?
+  plantoes           Plantao[]
+
+  ShiftTemplates ShiftTemplate[]
+
+  @@map("users")
+}
+
+model Location {
+  id        String    @id @default(cuid())
+  name      String
+  address   String?
+  phone     String?
+  color     String    @default("#0077B6")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id])
+  plantoes  Plantao[]
+
+  ShiftTemplates ShiftTemplate[]
+
+  @@map("locations")
+}
+
+model Contractor {
+  id        String    @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id])
+  plantoes  Plantao[]
+
+  ShiftTemplates ShiftTemplate[]
+
+  @@map("contractors")
+}
+
+model Plantao {
+  id           String      @id @default(cuid())
+  date         DateTime    @db.Date
+  value        Float
+  isFixed      Boolean     @default(false) @map("is_fixed")
+  paymentType  String
+  notes        String?
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  userId       String      @map("user_id")
+  locationId   String?     @map("location_id")
+  contractorId String?     @map("contractor_id")
+  endTime      DateTime    @map("end_time")
+  startTime    DateTime    @map("start_time")
+  payments     Payment[]
+  contractor   Contractor? @relation(fields: [contractorId], references: [id])
+  location     Location?   @relation(fields: [locationId], references: [id])
+  user         User        @relation(fields: [userId], references: [id])
+
+  @@map("plantoes")
+}
+
+model Payment {
+  id          String    @id @default(cuid())
+  paid        Boolean   @default(false)
+  notes       String?
+  method      String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  plantaoId   String    @map("plantao_id")
+  paymentDate DateTime? @map("payment_date") @db.Date
+  plantao     Plantao   @relation(fields: [plantaoId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model CNPJData {
+  id                 String   @id @default(cuid())
+  companyName        String?  @map("company_name")
+  cnpjNumber         String?  @map("cnpj_number")
+  accountingFirmName String?  @map("accounting_firm_name")
+  monthlyFee         Float?   @map("monthly_fee")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  userId             String   @unique @map("user_id")
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("cnpj_data")
+}
+
+model DeviceToken {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  token      String   @unique
+  deviceName String?  @map("device_name")
+  deviceType String?  @map("device_type")
+  appVersion String?  @map("app_version")
+  isActive   Boolean  @default(true) @map("is_active")
+  lastUsedAt DateTime @default(now()) @map("last_used_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("device_tokens")
+}
+
+model NotificationConfig {
+  id                  String   @id @default(cuid())
+  userId              String   @unique @map("user_id")
+  dailyReminder       Boolean  @default(true) @map("daily_reminder")
+  dailyReminderTime   String   @default("08:00") @map("daily_reminder_time")
+  beforeShiftReminder Boolean  @default(true) @map("before_shift_reminder")
+  beforeShiftMinutes  Int      @default(60) @map("before_shift_minutes")
+  weeklyReport        Boolean  @default(true) @map("weekly_report")
+  weeklyReportDay     Int      @default(1) @map("weekly_report_day")
+  weeklyReportTime    String   @default("09:00") @map("weekly_report_time")
+  monthlyReport       Boolean  @default(true) @map("monthly_report")
+  monthlyReportDay    Int      @default(1) @map("monthly_report_day")
+  monthlyReportTime   String   @default("09:00") @map("monthly_report_time")
+  shiftConfirmation   Boolean  @default(false) @map("shift_confirmation")
+  paymentReminder     Boolean  @default(true) @map("payment_reminder")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_configs")
+}
+
+model ShiftTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  startTime   String
+  endTime     String
+  value       Float
+  paymentType String
+  notes       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  userId       String  @map("user_id")
+  locationId   String? @map("location_id")
+  contractorId String? @map("contractor_id")
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location   Location?   @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  contractor Contractor? @relation(fields: [contractorId], references: [id], onDelete: SetNull)
+
+  @@map("shift_templates")
+}
+
+model NotificationLog {
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  deviceToken   String    @map("device_token")
+  title         String
+  body          String
+  data          Json?
+  type          String
+  status        String    @default("pending")
+  sentAt        DateTime? @map("sent_at")
+  deliveredAt   DateTime? @map("delivered_at")
+  failureReason String?   @map("failure_reason")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("notification_logs")
+}
